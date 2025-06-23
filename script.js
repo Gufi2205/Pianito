@@ -61,6 +61,10 @@ class PianoMemoryGame {
         this.patternsPerLevel = { 1: 1, 2: 1, 3: 1 }
         this.completedPatterns = 0
 
+        // Estado del modo
+        this.isFreeMode = false
+        this.sustainedKeys = new Set() // Para el modo libre
+
         // Elementos del DOM
         this.scoreElement = document.getElementById("score")
         this.levelElement = document.getElementById("level")
@@ -73,6 +77,18 @@ class PianoMemoryGame {
         this.finalScore = document.getElementById("final-score")
         this.finalLevel = document.getElementById("final-level")
         this.restartBtn = document.getElementById("restart-btn")
+
+        // Elementos del modo libre
+        this.modeToggle = document.getElementById("mode-toggle")
+        this.gameInfo = document.getElementById("game-info")
+        this.freeModeInfo = document.getElementById("free-mode-info")
+        this.gameControls = document.getElementById("game-controls")
+        this.freeModeControls = document.getElementById("free-mode-controls")
+        this.progressSection = document.getElementById("progress-section")
+        this.freeModeFooter = document.getElementById("free-mode-footer")
+        this.clearSustainBtn = document.getElementById("clear-sustain-btn")
+        this.gameModeLabel = document.getElementById("game-mode-label")
+        this.freeModeLabel = document.getElementById("free-mode-label")
 
         // Audio Context para generar sonidos
         this.audioContext = null
@@ -138,26 +154,75 @@ class PianoMemoryGame {
         this.createPiano()
         this.setupEventListeners()
         this.updateDisplay()
+        this.updateModeDisplay()
     }
 
     /**
-     * Crea las teclas del piano dinámicamente según el nivel actual
+     * Actualiza la visualización según el modo actual
+     */
+    updateModeDisplay() {
+        if (this.isFreeMode) {
+            // Mostrar elementos del modo libre
+            this.gameInfo.classList.add("hidden")
+            this.freeModeInfo.classList.remove("hidden")
+            this.gameControls.classList.add("hidden")
+            this.freeModeControls.classList.remove("hidden")
+            this.progressSection.classList.add("hidden")
+            this.freeModeFooter.classList.remove("hidden")
+
+            // Actualizar estilos de las etiquetas
+            this.gameModeLabel.classList.add("text-gray-400")
+            this.gameModeLabel.classList.remove("text-gray-700")
+            this.freeModeLabel.classList.add("text-blue-600")
+            this.freeModeLabel.classList.remove("text-gray-700")
+
+            // Recrear piano con todas las teclas
+            this.createPiano()
+        } else {
+            // Mostrar elementos del modo juego
+            this.gameInfo.classList.remove("hidden")
+            this.freeModeInfo.classList.add("hidden")
+            this.gameControls.classList.remove("hidden")
+            this.freeModeControls.classList.add("hidden")
+            this.progressSection.classList.remove("hidden")
+            this.freeModeFooter.classList.add("hidden")
+
+            // Actualizar estilos de las etiquetas
+            this.gameModeLabel.classList.add("text-blue-600")
+            this.gameModeLabel.classList.remove("text-gray-400")
+            this.freeModeLabel.classList.add("text-gray-400")
+            this.freeModeLabel.classList.remove("text-blue-600")
+
+            // Recrear piano según el nivel del juego
+            this.createPiano()
+        }
+    }
+
+    /**
+     * Crea las teclas del piano dinámicamente según el modo y nivel actual
      */
     createPiano() {
         const piano = document.getElementById("piano")
         piano.innerHTML = ""
 
-        // Determinar qué teclas mostrar según el nivel
+        // Determinar qué teclas mostrar
         let startIndex, endIndex
 
-        if (this.level === 1) {
-            // Nivel 1: Solo segunda octava (índices 12-23)
-            startIndex = 12
-            endIndex = 23
-        } else {
-            // Nivel 2 y 3+: Todas las octavas (índices 0-35)
+        if (this.isFreeMode) {
+            // Modo libre: Mostrar todas las teclas
             startIndex = 0
             endIndex = 35
+        } else {
+            // Modo juego: Según el nivel
+            if (this.level === 1) {
+                // Nivel 1: Solo segunda octava (índices 12-23)
+                startIndex = 12
+                endIndex = 23
+            } else {
+                // Nivel 2 y 3+: Todas las octavas (índices 0-35)
+                startIndex = 0
+                endIndex = 35
+            }
         }
 
         // Obtener las teclas del teclado para mostrar en cada tecla del piano
@@ -215,6 +280,21 @@ class PianoMemoryGame {
         this.startBtn.addEventListener("click", () => this.startGame())
         this.replayBtn.addEventListener("click", () => this.showPattern())
         this.restartBtn.addEventListener("click", () => this.restartGame())
+        this.clearSustainBtn.addEventListener("click", () => this.clearSustainedKeys())
+
+        // Toggle de modo
+        this.modeToggle.addEventListener("change", (e) => {
+            this.isFreeMode = e.target.checked
+            this.updateModeDisplay()
+
+            // Si estaba en medio de un juego, reiniciarlo
+            if (this.gameStarted && !this.isFreeMode) {
+                this.restartGame()
+            }
+
+            // Limpiar teclas sostenidas al cambiar de modo
+            this.clearSustainedKeys()
+        })
 
         // Soporte para teclado
         document.addEventListener("keydown", (e) => this.handleKeyboard(e))
@@ -225,32 +305,42 @@ class PianoMemoryGame {
      * Maneja la entrada del teclado para tocar las teclas del piano
      */
     handleKeyboard(event) {
-        if (!this.isUserTurn) return
-
         const key = event.key === " " ? "Space" : event.key.toLowerCase()
         const keyIndex = this.keyboardMap[key]
 
         if (keyIndex !== undefined) {
-            // Verificar si la tecla está visible en el nivel actual
+            // Verificar si la tecla está visible en el modo/nivel actual
             const isKeyVisible = this.isKeyVisible(keyIndex)
 
             if (isKeyVisible) {
                 event.preventDefault()
+
+                // En modo libre, evitar repetir si ya está presionada
+                if (this.isFreeMode && this.sustainedKeys.has(keyIndex)) {
+                    return
+                }
+
                 this.playKey(keyIndex)
             }
         }
     }
 
     /**
-     * Verifica si una tecla es visible en el nivel actual
+     * Verifica si una tecla es visible en el modo/nivel actual
      */
     isKeyVisible(keyIndex) {
-        if (this.level === 1) {
-            // Nivel 1: Solo segunda octava (índices 12-23)
-            return keyIndex >= 12 && keyIndex <= 23
-        } else {
-            // Nivel 2 y 3+: Todas las octavas (índices 0-35)
+        if (this.isFreeMode) {
+            // Modo libre: Todas las teclas están disponibles
             return keyIndex >= 0 && keyIndex <= 35
+        } else {
+            // Modo juego: Según el nivel
+            if (this.level === 1) {
+                // Nivel 1: Solo segunda octava (índices 12-23)
+                return keyIndex >= 12 && keyIndex <= 23
+            } else {
+                // Nivel 2 y 3+: Todas las octavas (índices 0-35)
+                return keyIndex >= 0 && keyIndex <= 35
+            }
         }
     }
 
@@ -268,9 +358,21 @@ class PianoMemoryGame {
     }
 
     /**
-     * Inicia una nueva partida
+     * Limpia todas las teclas sostenidas en modo libre
+     */
+    clearSustainedKeys() {
+        this.sustainedKeys.forEach(keyIndex => {
+            this.releaseKey(keyIndex)
+        })
+        this.sustainedKeys.clear()
+    }
+
+    /**
+     * Inicia una nueva partida (solo en modo juego)
      */
     startGame() {
+        if (this.isFreeMode) return
+
         this.gameStarted = true
         this.score = 0
         this.level = 1
@@ -285,9 +387,11 @@ class PianoMemoryGame {
     }
 
     /**
-     * Genera un nuevo patrón basado en el nivel actual
+     * Genera un nuevo patrón basado en el nivel actual (solo en modo juego)
      */
     generateNewPattern() {
+        if (this.isFreeMode) return
+
         this.currentPattern = []
         this.userPattern = []
 
@@ -450,9 +554,11 @@ class PianoMemoryGame {
     }
 
     /**
-     * Muestra el patrón al jugador
+     * Muestra el patrón al jugador (solo en modo juego)
      */
     async showPattern() {
+        if (this.isFreeMode) return
+
         this.isShowingPattern = true
         this.isUserTurn = false
         this.statusMessage.textContent = "👀 Observa el patrón..."
@@ -486,7 +592,9 @@ class PianoMemoryGame {
 
         // Aplicar efectos visuales
         keyElements.forEach((keyElement) => {
-            keyElement.classList.add("highlight", "pressed")
+            if (keyElement) {
+                keyElement.classList.add("highlight", "pressed")
+            }
         })
 
         // Reproducir sonidos simultáneamente
@@ -498,7 +606,9 @@ class PianoMemoryGame {
 
         // Remover efectos visuales
         keyElements.forEach((keyElement) => {
-            keyElement.classList.remove("highlight", "pressed")
+            if (keyElement) {
+                keyElement.classList.remove("highlight", "pressed")
+            }
         })
     }
 
@@ -506,39 +616,47 @@ class PianoMemoryGame {
      * Maneja cuando el usuario toca una tecla
      */
     playKey(keyIndex) {
-        if (!this.isUserTurn) return
-
         const keyElement = document.querySelector(`[data-index="${keyIndex}"]`)
+        if (!keyElement) return
 
         // Agregar efecto visual de tecla presionada
         keyElement.classList.add("pressed")
 
         this.playSound(this.keys[keyIndex].frequency)
 
-        // Agregar la tecla al patrón del usuario
-        if (this.userPattern.length === 0 || this.userPattern[this.userPattern.length - 1].submitted) {
-            // Nuevo elemento (nota o acorde)
-            this.userPattern.push({ keys: [keyIndex], submitted: false })
+        if (this.isFreeMode) {
+            // En modo libre, agregar a teclas sostenidas
+            this.sustainedKeys.add(keyIndex)
         } else {
-            // Agregar a elemento actual (para formar acordes)
-            const currentElement = this.userPattern[this.userPattern.length - 1]
-            if (!currentElement.keys.includes(keyIndex)) {
-                currentElement.keys.push(keyIndex)
-                currentElement.keys.sort((a, b) => a - b)
-            }
-        }
+            // Lógica del juego original
+            if (!this.isUserTurn) return
 
-        // Auto-submit después de un breve delay si no se presionan más teclas
-        clearTimeout(this.submitTimeout)
-        this.submitTimeout = setTimeout(() => {
-            this.submitCurrentElement()
-        }, 500)
+            // Agregar la tecla al patrón del usuario
+            if (this.userPattern.length === 0 || this.userPattern[this.userPattern.length - 1].submitted) {
+                // Nuevo elemento (nota o acorde)
+                this.userPattern.push({ keys: [keyIndex], submitted: false })
+            } else {
+                // Agregar a elemento actual (para formar acordes)
+                const currentElement = this.userPattern[this.userPattern.length - 1]
+                if (!currentElement.keys.includes(keyIndex)) {
+                    currentElement.keys.push(keyIndex)
+                    currentElement.keys.sort((a, b) => a - b)
+                }
+            }
+
+            // Auto-submit después de un breve delay si no se presionan más teclas
+            clearTimeout(this.submitTimeout)
+            this.submitTimeout = setTimeout(() => {
+                this.submitCurrentElement()
+            }, 500)
+        }
     }
 
     /**
-     * Confirma el elemento actual del usuario
+     * Confirma el elemento actual del usuario (solo en modo juego)
      */
     submitCurrentElement() {
+        if (this.isFreeMode) return
         if (this.userPattern.length === 0 || this.userPattern[this.userPattern.length - 1].submitted) {
             return
         }
@@ -556,13 +674,20 @@ class PianoMemoryGame {
         const keyElement = document.querySelector(`[data-index="${keyIndex}"]`)
         if (keyElement) {
             keyElement.classList.remove("pressed")
+
+            // En modo libre, remover de teclas sostenidas
+            if (this.isFreeMode) {
+                this.sustainedKeys.delete(keyIndex)
+            }
         }
     }
 
     /**
-     * Verifica la entrada del usuario contra el patrón
+     * Verifica la entrada del usuario contra el patrón (solo en modo juego)
      */
     checkUserInput() {
+        if (this.isFreeMode) return
+
         const currentIndex = this.userPattern.filter((el) => el.submitted).length - 1
         const expectedElement = this.currentPattern[currentIndex]
         const userElement = this.userPattern[currentIndex].keys
@@ -667,6 +792,8 @@ class PianoMemoryGame {
      * Actualiza la barra de progreso
      */
     updateProgress() {
+        if (this.isFreeMode) return
+
         const submittedElements = this.userPattern.filter((el) => el.submitted).length
         const progress = (submittedElements / this.currentPattern.length) * 100
         this.progressFill.style.width = `${progress}%`
@@ -732,6 +859,9 @@ class PianoMemoryGame {
         this.isShowingPattern = false
         this.completedPatterns = 0
         clearTimeout(this.submitTimeout)
+
+        // Limpiar teclas sostenidas
+        this.clearSustainedKeys()
     }
 
     /**
