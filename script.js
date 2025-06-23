@@ -63,7 +63,6 @@ class PianoMemoryGame {
 
         // Estado del modo
         this.isFreeMode = false
-        this.sustainedKeys = new Set() // Para el modo libre
 
         // Elementos del DOM
         this.scoreElement = document.getElementById("score")
@@ -86,7 +85,6 @@ class PianoMemoryGame {
         this.freeModeControls = document.getElementById("free-mode-controls")
         this.progressSection = document.getElementById("progress-section")
         this.freeModeFooter = document.getElementById("free-mode-footer")
-        this.clearSustainBtn = document.getElementById("clear-sustain-btn")
         this.gameModeLabel = document.getElementById("game-mode-label")
         this.freeModeLabel = document.getElementById("free-mode-label")
 
@@ -280,7 +278,6 @@ class PianoMemoryGame {
         this.startBtn.addEventListener("click", () => this.startGame())
         this.replayBtn.addEventListener("click", () => this.showPattern())
         this.restartBtn.addEventListener("click", () => this.restartGame())
-        this.clearSustainBtn.addEventListener("click", () => this.clearSustainedKeys())
 
         // Toggle de modo
         this.modeToggle.addEventListener("change", (e) => {
@@ -291,9 +288,6 @@ class PianoMemoryGame {
             if (this.gameStarted && !this.isFreeMode) {
                 this.restartGame()
             }
-
-            // Limpiar teclas sostenidas al cambiar de modo
-            this.clearSustainedKeys()
         })
 
         // Soporte para teclado
@@ -314,12 +308,6 @@ class PianoMemoryGame {
 
             if (isKeyVisible) {
                 event.preventDefault()
-
-                // En modo libre, evitar repetir si ya está presionada
-                if (this.isFreeMode && this.sustainedKeys.has(keyIndex)) {
-                    return
-                }
-
                 this.playKey(keyIndex)
             }
         }
@@ -355,16 +343,6 @@ class PianoMemoryGame {
             event.preventDefault()
             this.releaseKey(keyIndex)
         }
-    }
-
-    /**
-     * Limpia todas las teclas sostenidas en modo libre
-     */
-    clearSustainedKeys() {
-        this.sustainedKeys.forEach(keyIndex => {
-            this.releaseKey(keyIndex)
-        })
-        this.sustainedKeys.clear()
     }
 
     /**
@@ -625,8 +603,8 @@ class PianoMemoryGame {
         this.playSound(this.keys[keyIndex].frequency)
 
         if (this.isFreeMode) {
-            // En modo libre, agregar a teclas sostenidas
-            this.sustainedKeys.add(keyIndex)
+            // En modo libre, solo reproducir sonido y efecto visual
+            return
         } else {
             // Lógica del juego original
             if (!this.isUserTurn) return
@@ -674,11 +652,6 @@ class PianoMemoryGame {
         const keyElement = document.querySelector(`[data-index="${keyIndex}"]`)
         if (keyElement) {
             keyElement.classList.remove("pressed")
-
-            // En modo libre, remover de teclas sostenidas
-            if (this.isFreeMode) {
-                this.sustainedKeys.delete(keyIndex)
-            }
         }
     }
 
@@ -859,9 +832,6 @@ class PianoMemoryGame {
         this.isShowingPattern = false
         this.completedPatterns = 0
         clearTimeout(this.submitTimeout)
-
-        // Limpiar teclas sostenidas
-        this.clearSustainedKeys()
     }
 
     /**
