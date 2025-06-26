@@ -6,6 +6,10 @@
     <title>Juego de Memoria Musical</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        .bg-purple-pastel {
+            background: linear-gradient(145deg, #f3e8ff, #e9d5ff);
+        }
+
         .piano-key.highlight { animation: highlight 0.5s ease; }
         .piano-key.correct { animation: correct 0.5s ease; }
         .piano-key.wrong { animation: wrong 0.5s ease; }
@@ -26,32 +30,36 @@
         .white-key {
             background: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 100%);
             border: 2px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-bottom: 3px solid #ccc;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8);
         }
-        .white-key:active, .white-key.pressed {
-            background: linear-gradient(to bottom, #666666 0%, #555555 100%);
+
+        .white-key:hover {
+            background: linear-gradient(to bottom, #f8f8f8 0%, #5c5c5c 100%);
+        }
+
+        .white-key:active,
+        .white-key.pressed {
+            background: linear-gradient(to bottom, #f8f8f8 0%, #5c5c5c 100%);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
             transform: translateY(1px);
-            color: white;
         }
 
         .black-key {
             background: linear-gradient(to bottom, #2a2a2a 0%, #000000 100%);
             border: 1px solid #000;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
-        .black-key:active, .black-key.pressed {
-            background: linear-gradient(to bottom, #666666 0%, #444444 100%);
+
+        .black-key:hover {
+            background: linear-gradient(to bottom, #3a3a3a 0%, #1a1a1a 100%);
+        }
+
+        .black-key:active,
+        .black-key.pressed {
+            background: linear-gradient(to bottom, #1a1a1a 0%, #000000 100%);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
             transform: translateY(1px);
-        }
-
-        .piano-disabled .white-key:hover {
-            background: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 100%) !important;
-            cursor: default !important;
-        }
-
-        .piano-disabled .black-key:hover {
-            background: linear-gradient(to bottom, #2a2a2a 0%, #000000 100%) !important;
-            cursor: default !important;
         }
 
         .piano-disabled .piano-key {
@@ -65,16 +73,58 @@
             padding: 20px;
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
         }
+
+        .back-button {
+            background: linear-gradient(135deg, #d8b4fe, #c084fc);
+            transition: all 0.3s ease;
+            color: #4c1d95;
+            border: 2px solid #d8b4fe;
+        }
+
+        .back-button:hover {
+            background: linear-gradient(135deg, #c084fc, #a855f7);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(192, 132, 252, 0.3);
+            color: white;
+        }
+
+        .button-disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .level-info {
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            border: 2px solid #4fc3f7;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-br from-amber-100 via-orange-100 to-red-100 flex justify-center items-center p-5">
+<body class="min-h-screen bg-purple-pastel flex justify-center items-center p-5 font-sans">
     <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-7xl w-full">
+
         <!-- Header -->
-        <header class="text-center mb-8">
-            <div class="flex justify-around bg-gray-50 p-4 rounded-xl font-bold text-gray-600">
-                <div>Puntuación: <span id="score" class="text-blue-600">0</span></div>
-                <div>Nivel: <span id="level" class="text-green-600">1</span></div>
-                <div>Vidas: <span id="lives" class="text-red-600">3</span></div>
+        <header class="mb-8">
+            <div class="bg-gray-200 p-4 rounded-xl text-gray-700 flex items-center justify-between flex-wrap">
+                <div class="mb-4 sm:mb-0">
+                    <button id="back-button" class="back-button font-bold py-3 px-6 rounded-lg flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                        Regresar
+                    </button>
+                </div>
+
+                <div class="text-center flex-1">
+                    <div class="flex justify-around p-4 rounded-xl text-lg font-bold text-gray-600">
+                        <div>Puntuación: <span id="score" class="text-blue-600">0</span></div>
+                        <div>Nivel: <span id="level" class="text-green-600">1</span></div>
+                        <div>Vidas: <span id="lives" class="text-red-600">3</span></div>
+                    </div>
+                </div>
             </div>
         </header>
 

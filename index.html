@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Melodías Mentales</title>
-    <meta http-equiv="refresh" content="10;url=Botones.html">
+    <meta http-equiv="refresh" content="10;url=Pantalla_Inicial/Botones.html">
 
 
   <!-- Fuente Euphoria Script -->
@@ -200,6 +200,31 @@
         left: 18px;
       }
     }
+
+    .credits {
+  font-size: 24px;
+  margin-top: 20px;
+  color: #555;
+  font-family: "Euphoria Script", cursive;
+  text-align: center;
+  opacity: 0;
+  animation: showTitle 2.5s forwards;
+  animation-delay: 4s;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+}
+
+
+@keyframes fadeInCredits {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 0.6;
+    transform: translateY(0);
+  }
+}
+
   </style>
 </head>
 <body>
@@ -248,8 +273,14 @@
     <div class="piano-container">
       <div class="piano" id="piano"></div>
     </div>
+    <div class="credits">Nikolle Acuña - Julio Perez - Alonso Lucas</div>
+<audio id="background-audio" autoplay loop>
+  <source src="/sonido/Sonido _piano.mp3">
+  Tu navegador no soporta el audio HTML5.
+</audio>
+
   </div>
 
- <script src="Animacion_Inicial.js"></script>
+ <script src="Pantalla_Inicial/Animacion_Inicial.js"></script>
 </body>
 </html>

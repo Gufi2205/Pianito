@@ -150,20 +150,20 @@ class PianoLibre {
             if (key.type === "white") {
                 keyElement.className = `${baseClasses} white-key w-12 h-40 mx-0.5 rounded-b-lg`
                 keyElement.innerHTML = `
-                    <div class="key-label text-gray-700 text-xs font-bold mt-2 bg-white bg-opacity-70 px-1 rounded">
+                    <div class="key-label text-xs font-bold mt-2  px-1 rounded">
                         ${keyboardKey.toUpperCase()}
                     </div>
-                    <div class="key-label text-gray-600 text-sm font-bold mb-3 bg-white bg-opacity-70 px-2 py-1 rounded">
+                    <div class="key-label  text-sm font-bold mb-3  px-2 py-1 rounded">
                         ${key.note}
                     </div>
                 `
             } else {
                 keyElement.className = `${baseClasses} black-key w-8 h-24 -mx-4 z-10 rounded-b-lg`
                 keyElement.innerHTML = `
-                    <div class="key-label text-white text-xs font-bold mt-1 bg-black bg-opacity-50 px-1 rounded">
+                    <div class="key-label text-white text-xs font-bold mt-1 px-2 ">
                         ${keyboardKey.toUpperCase()}
                     </div>
-                    <div class="key-label text-white text-xs font-bold mb-2 bg-black bg-opacity-50 px-1 rounded">
+                    <div class="key-label text-white text-xs font-bold mb-2  px-2 ">
                         ${key.note}
                     </div>
                 `

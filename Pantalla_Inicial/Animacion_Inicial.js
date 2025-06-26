@@ -1,6 +1,9 @@
 // Generar teclas si existe el elemento piano
 const piano = document.getElementById("piano");
-
+document.body.addEventListener("click", () => {
+    const audio = document.getElementById("background-audio");
+    if (audio.paused) audio.play();
+  }, { once: true });
 if (piano) {
   for (let i = 0; i < 22; i++) {
     const key = document.createElement("div");
@@ -40,7 +43,18 @@ setTimeout(() => {
   setInterval(crearNotasMultiples, 300);
 }, 300);
 
+function playClickSound() {
+  const clickSound = document.getElementById("clickSound");
+  if (clickSound) {
+    clickSound.currentTime = 0;
+    clickSound.volume = 0.4; // volumen suave
+    clickSound.play();
+  }
+}
+
 function expandAndRedirect(event, color, url) {
+  playClickSound(); // ✅ sonido al hacer clic
+
   const button = event.currentTarget;
   const rect = button.getBoundingClientRect();
 
@@ -53,17 +67,16 @@ function expandAndRedirect(event, color, url) {
   overlay.style.top = `${rect.top + rect.height / 2}px`;
   document.body.appendChild(overlay);
 
-  // Espera un poco para que el overlay esté en el DOM antes de escalar
   requestAnimationFrame(() => {
     overlay.style.transform = "scale(50)";
   });
 
-  // Redirigir después de la animación
   setTimeout(() => {
     window.location.href = url;
   }, 700);
 }
 
+// Evento al hacer clic
 document.getElementById("modoLibre")?.addEventListener("click", function (e) {
   expandAndRedirect(e, "#d4f4d2", "/Juego/libre.html");
 });
@@ -71,3 +84,7 @@ document.getElementById("modoLibre")?.addEventListener("click", function (e) {
 document.getElementById("modoMemoria")?.addEventListener("click", function (e) {
   expandAndRedirect(e, "#e9d1f4", "/Juego/memoria.html");
 });
+
+// ✅ Evento al pasar el mouse (hover)
+document.getElementById("modoLibre")?.addEventListener("mouseenter", playClickSound);
+document.getElementById("modoMemoria")?.addEventListener("mouseenter", playClickSound);
