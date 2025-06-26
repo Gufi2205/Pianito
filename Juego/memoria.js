@@ -62,7 +62,7 @@ class PianoMemoryGame {
         this.completedPatterns = 0
 
         // Estado del modo
-        this.isFreeMode = false
+        this.isFreeMode = true
 
         // Elementos del DOM
         this.scoreElement = document.getElementById("score")

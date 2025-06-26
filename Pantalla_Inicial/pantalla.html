@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Melodías Mentales</title>
+    <meta http-equiv="refresh" content="10;url=Botones.html">
+
+
+  <!-- Fuente Euphoria Script -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Euphoria+Script&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: linear-gradient(135deg, #f8f8f0 0%, #ffffff 100%);
+      font-family: "Euphoria Script", cursive;
+      position: relative;
+      height: 100vh;
+    }
+
+    .sheet-music-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-evenly;
+      z-index: 0;
+      opacity: 0.1;
+    }
+
+    .staff-group {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 20%;
+      margin: 0 10%;
+    }
+
+    .staff-line {
+      width: 120%;
+      height: 2px;
+      background: #333;
+      margin-left: -10%;
+      animation: fadeInStaff;
+    }
+
+    .treble-clef {
+      position: absolute;
+      font-size: 120px;
+      color: #333;
+      opacity: 0.15;
+      left: 50px;
+      top: 20%;
+      animation: fadeInClef 4s ease-in-out forwards;
+    }
+
+    .floating-notes {
+      position: absolute;
+      font-size: 30px;
+      color: #333;
+      opacity: 0.1;
+      animation: floatNotes 15s linear infinite;
+    }
+
+    .note1 { top: 15%; left: 20%; animation-delay: 0s; }
+    .note2 { top: 60%; left: 80%; animation-delay: 3s; }
+    .note3 { top: 35%; left: 70%; animation-delay: 6s; }
+    .note4 { top: 80%; left: 30%; animation-delay: 9s; }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      position: relative;
+      z-index: 10;
+    }
+
+    .title {
+      font-size: 96px;
+      color: #2c2c2c;
+      opacity: 0;
+      animation: showTitle 2.5s forwards;
+      animation-delay: 4s;
+      margin-bottom: 20px;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.1);
+      background: linear-gradient(45deg, #4a4a4a, #2c2c2c, #1a1a1a);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .piano-container {
+      opacity: 0;
+      animation: fadeInPiano 2s forwards;
+      animation-delay: 1.5s;
+      perspective: 1000px;
+    }
+
+    .piano {
+      display: flex;
+      gap: 1px;
+      transform: rotateX(15deg);
+      filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+    }
+
+    .key {
+      width: 32px;
+      height: 160px;
+      background: linear-gradient(to bottom, #ffffff 0%, #f5f5f5 100%);
+      border: 1px solid #ccc;
+      border-radius: 0 0 8px 8px;
+      position: relative;
+      box-shadow: inset 0 1px 3px rgba(255,255,255,0.8);
+    }
+
+    .key.black {
+      background: linear-gradient(to bottom, #333 0%, #111 100%);
+      width: 22px;
+      height: 110px;
+      position: absolute;
+      top: 0;
+      left: 24px;
+      z-index: 5;
+      border-radius: 0 0 4px 4px;
+      box-shadow: inset 0 1px 2px rgba(255,255,255,0.1);
+    }
+
+    .note {
+      position: absolute;
+      color: #000;
+      font-size: 24px;
+      opacity: 0;
+      animation: floatNote 5s linear forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatNote {
+      0% {
+        bottom: -40px; /* Más abajo */
+        opacity: 0;
+      }
+      20% {
+        opacity: 1;
+      }
+      100% {
+        bottom: 100%;
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+    }
+
+    @keyframes fadeInStaff {
+      0% { opacity: 0; transform: scaleX(0); }
+      100% { opacity: 0.1; transform: scaleX(1); }
+    }
+
+    @keyframes fadeInClef {
+      0% { opacity: 0; transform: scale(0) rotate(-180deg); }
+      100% { opacity: 0.15; transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes floatNotes {
+      0% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
+      50% { transform: translateY(-20px) rotate(180deg); opacity: 0.2; }
+      100% { transform: translateY(0px) rotate(360deg); opacity: 0.1; }
+    }
+
+    @keyframes fadeInPiano {
+      0% { opacity: 0; transform: translateY(50px) scale(0.8); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes showTitle {
+      0% {
+        opacity: 0;
+        transform: scale(0.5) translateY(-50px);
+      }
+      50% {
+        transform: scale(1.1) translateY(-10px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .title {
+        font-size: 48px;
+        margin-bottom: 40px;
+      }
+
+      .key {
+        width: 24px;
+        height: 120px;
+      }
+
+      .key.black {
+        width: 16px;
+        height: 80px;
+        left: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Fondo de partitura -->
+<div class="sheet-music-bg">
+  <div class="treble-clef">𝄞</div>
+
+  <!-- 4 grupos de líneas con separación de 30px -->
+  <div class="staff-group" style="margin-bottom: 60px;">
+    <div class="staff-line" style="animation-delay: 0.5s;"></div>
+    <div class="staff-line" style="animation-delay: 1s;"></div>
+    <div class="staff-line" style="animation-delay: 1.5s;"></div>
+    <div class="staff-line" style="animation-delay: 2s;"></div>
+    <div class="staff-line" style="animation-delay: 2.5s;"></div>
+  </div>
+
+  <div class="staff-group" style="margin-bottom: 60px;">
+    <div class="staff-line" style="animation-delay: 3s;"></div>
+    <div class="staff-line" style="animation-delay: 3.5s;"></div>
+    <div class="staff-line" style="animation-delay: 4s;"></div>
+    <div class="staff-line" style="animation-delay: 4.5s;"></div>
+    <div class="staff-line" style="animation-delay: 5s;"></div>
+  </div>
+
+  <div class="staff-group" style="margin-bottom: 60px;">
+    <div class="staff-line" style="animation-delay: 3s;"></div>
+    <div class="staff-line" style="animation-delay: 3.5s;"></div>
+    <div class="staff-line" style="animation-delay: 4s;"></div>
+    <div class="staff-line" style="animation-delay: 4.5s;"></div>
+    <div class="staff-line" style="animation-delay: 5s;"></div>
+  </div>
+
+  <div class="staff-group" style="margin-bottom: 60px;">
+    <div class="staff-line" style="animation-delay: 3s;"></div>
+    <div class="staff-line" style="animation-delay: 3.5s;"></div>
+    <div class="staff-line" style="animation-delay: 4s;"></div>
+    <div class="staff-line" style="animation-delay: 4.5s;"></div>
+    <div class="staff-line" style="animation-delay: 5s;"></div>
+  </div>
+
+  <!-- Notas flotantes -->
+  <div class="floating-notes note1">♪</div>
+  <div class="floating-notes note2">♫</div>
+  <div class="floating-notes note3">♬</div>
+  <div class="floating-notes note4">♩</div>
+</div>
+
+
+  <div class="container">
+    <div class="title">Melodías Mentales</div>
+    <div class="piano-container">
+      <div class="piano" id="piano"></div>
+    </div>
+  </div>
+
+  <script>
+    const piano = document.getElementById("piano");
+
+    for (let i = 0; i < 22; i++) {
+      const key = document.createElement("div");
+      key.classList.add("key");
+      piano.appendChild(key);
+
+      if (![0, 3, 7, 10, 14, 17, 21].includes(i)) {
+        const blackKey = document.createElement("div");
+        blackKey.classList.add("key", "black");
+        key.appendChild(blackKey);
+      }
+    }
+    // Crear notas musicales en bucle
+const notas = ["♪", "♫", "♬", "♩", "♭", "♯", "𝄞", "𝄢", "𝅘𝅥𝅮", "𝅘𝅥𝅯", "𝅘𝅥𝅰"];
+function crearNotasMultiples() {
+  for (let i = 0; i < 3; i++) {
+    const note = document.createElement("div");
+    note.className = "note";
+    note.innerText = notas[Math.floor(Math.random() * notas.length)];
+    note.style.left = Math.random() * 100 + "%";
+    note.style.fontSize = `${Math.random() * 20 + 20}px`;
+    note.style.bottom = "-40px";
+    note.style.zIndex = "5";
+    document.body.appendChild(note);
+
+    setTimeout(() => {
+      note.remove();
+    }, 5000);
+  }
+}
+
+// Bucle continuo de notas
+setTimeout(() => {
+  setInterval(crearNotasMultiples, 300);
+}, 3000);
+  </script>
+</body>
+</html>

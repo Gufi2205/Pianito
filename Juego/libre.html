@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Memoria Musical</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .piano-key.highlight { animation: highlight 0.5s ease; }
+        .piano-key.correct { animation: correct 0.5s ease; }
+        .piano-key.wrong { animation: wrong 0.5s ease; }
+
+        @keyframes highlight {
+            0% { background-color: #ffd700; transform: translateY(2px); }
+            100% { background-color: inherit; transform: translateY(0); }
+        }
+        @keyframes correct {
+            0% { background-color: #4caf50; transform: translateY(2px); }
+            100% { background-color: inherit; transform: translateY(0); }
+        }
+        @keyframes wrong {
+            0% { background-color: #f44336; transform: translateY(2px); }
+            100% { background-color: inherit; transform: translateY(0); }
+        }
+
+        .white-key {
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 100%);
+            border: 2px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .white-key:active, .white-key.pressed {
+            background: linear-gradient(to bottom, #666666 0%, #555555 100%);
+            transform: translateY(1px);
+            color: white;
+        }
+
+        .black-key {
+            background: linear-gradient(to bottom, #2a2a2a 0%, #000000 100%);
+            border: 1px solid #000;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+        .black-key:active, .black-key.pressed {
+            background: linear-gradient(to bottom, #666666 0%, #444444 100%);
+            transform: translateY(1px);
+        }
+
+        .piano-disabled .white-key:hover {
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f8f8 100%) !important;
+            cursor: default !important;
+        }
+
+        .piano-disabled .black-key:hover {
+            background: linear-gradient(to bottom, #2a2a2a 0%, #000000 100%) !important;
+            cursor: default !important;
+        }
+
+        .piano-disabled .piano-key {
+            pointer-events: none;
+        }
+
+        .piano-container {
+            background: #000000;
+            border: 3px solid #000000;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-amber-100 via-orange-100 to-red-100 flex justify-center items-center p-5">
+    <div class="bg-white rounded-3xl shadow-2xl p-8 max-w-7xl w-full">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="flex justify-around bg-gray-50 p-4 rounded-xl font-bold text-gray-600">
+                <div>Puntuación: <span id="score" class="text-blue-600">0</span></div>
+                <div>Nivel: <span id="level" class="text-green-600">1</span></div>
+                <div>Vidas: <span id="lives" class="text-red-600">3</span></div>
+            </div>
+        </header>
+
+        <!-- Controles -->
+        <div class="text-center mb-8">
+            <div id="status-message" class="text-xl font-bold text-gray-800 mb-4">
+                ¡Presiona INICIAR para comenzar!
+            </div>
+            <div class="flex gap-3 justify-center">
+                <button id="start-btn" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg">
+                    INICIAR
+                </button>
+                <button id="replay-btn" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg hidden">
+                    VER PATRÓN
+                </button>
+            </div>
+        </div>
+
+        <!-- Piano -->
+        <div class="flex justify-center mb-8">
+            <div class="piano-container">
+                <div id="piano" class="flex relative"></div>
+            </div>
+        </div>
+
+        <!-- Progreso -->
+        <div class="text-center">
+            <div class="w-full h-5 bg-gray-200 rounded-full overflow-hidden mb-3">
+                <div id="progress-fill" class="h-full bg-gradient-to-r from-green-400 to-green-600 w-0 transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Game Over -->
+    <div id="game-over-modal" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 hidden">
+        <div class="bg-white p-10 rounded-2xl text-center shadow-2xl max-w-md w-full mx-4">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">¡Juego Terminado!</h2>
+            <p class="mb-4 text-gray-600 text-lg">
+                Puntuación: <span id="final-score" class="font-bold text-blue-600">0</span>
+            </p>
+            <button id="restart-btn" class="px-8 py-3 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg">
+                JUGAR DE NUEVO
+            </button>
+        </div>
+    </div>
+
+    <script src="libre.js"></script>
+</body>
+</html>
