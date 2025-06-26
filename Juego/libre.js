@@ -1,465 +1,366 @@
-class PianoGame {
-  constructor() {
-    // Configuración básica
-    this.keys = this.generateKeys()
-    this.keyboardMap = {
-      1: 0,
-      2: 1,
-      3: 2,
-      4: 3,
-      5: 4,
-      6: 5,
-      7: 6,
-      8: 7,
-      9: 8,
-      0: 9,
-      q: 10,
-      w: 11,
-      e: 12,
-      r: 13,
-      t: 14,
-      y: 15,
-      u: 16,
-      i: 17,
-      o: 18,
-      p: 19,
-      a: 20,
-      s: 21,
-      d: 22,
-      f: 23,
-      g: 24,
-      h: 25,
-      j: 26,
-      k: 27,
-      l: 28,
-      z: 29,
-      x: 30,
-      c: 31,
-      v: 32,
-      b: 33,
-      n: 34,
-      m: 35,
+class PianoLibre {
+    constructor() {
+        // Configuración del piano con 3 octavas (36 teclas)
+        this.keys = this.generateThreeOctaves()
+
+        // Mapeo del teclado usando 1-0 y A-Z
+        this.keyboardMap = {
+            // Primera octava (C1-B1) - Números y primeras letras
+            1: 0, // C1
+            2: 1, // C#1
+            3: 2, // D1
+            4: 3, // D#1
+            5: 4, // E1
+            6: 5, // F1
+            7: 6, // F#1
+            8: 7, // G1
+            9: 8, // G#1
+            0: 9, // A1
+            q: 10, // A#1
+            w: 11, // B1
+
+            // Segunda octava (C2-B2) - Fila QWERTY continuación
+            e: 12, // C2
+            r: 13, // C#2
+            t: 14, // D2
+            y: 15, // D#2
+            u: 16, // E2
+            i: 17, // F2
+            o: 18, // F#2
+            p: 19, // G2
+            a: 20, // G#2
+            s: 21, // A2
+            d: 22, // A#2
+            f: 23, // B2
+
+            // Tercera octava (C3-B3) - Fila ASDF continuación
+            g: 24, // C3
+            h: 25, // C#3
+            j: 26, // D3
+            k: 27, // D#3
+            l: 28, // E3
+            z: 29, // F3
+            x: 30, // F#3
+            c: 31, // G3
+            v: 32, // G#3
+            b: 33, // A3
+            n: 34, // A#3
+            m: 35, // B3
+        }
+
+        // Audio Context para generar sonidos
+        this.audioContext = null
+        this.initAudioContext()
+
+        // Sistema de notas tocadas
+        this.playedNotes = []
+        this.maxNotesDisplay = 15 // Máximo de notas a mostrar
+        this.noteFadeTime = 3000 // Tiempo en ms antes de que la nota empiece a desaparecer
+
+        // Inicializar el piano
+        this.init()
     }
 
-    // Estado del juego
-    this.score = 0
-    this.level = 1
-    this.lives = 3
-    this.pattern = []
-    this.userInput = []
-    this.isPlaying = false
-    this.gameStarted = false
-    this.hasError = false
-    this.isTransitioning = false // Nueva variable para transiciones
-    this.processingInput = false // Para evitar eventos duplicados
+    /**
+     * Genera las 3 octavas del piano (36 teclas)
+     */
+    generateThreeOctaves() {
+        const baseNotes = [
+            { note: "C", type: "white", baseFreq: 261.63 },
+            { note: "C#", type: "black", baseFreq: 277.18 },
+            { note: "D", type: "white", baseFreq: 293.66 },
+            { note: "D#", type: "black", baseFreq: 311.13 },
+            { note: "E", type: "white", baseFreq: 329.63 },
+            { note: "F", type: "white", baseFreq: 349.23 },
+            { note: "F#", type: "black", baseFreq: 369.99 },
+            { note: "G", type: "white", baseFreq: 392.0 },
+            { note: "G#", type: "black", baseFreq: 415.3 },
+            { note: "A", type: "white", baseFreq: 440.0 },
+            { note: "A#", type: "black", baseFreq: 466.16 },
+            { note: "B", type: "white", baseFreq: 493.88 },
+        ]
 
-    // Elementos DOM
-    this.scoreEl = document.getElementById("score")
-    this.levelEl = document.getElementById("level")
-    this.livesEl = document.getElementById("lives")
-    this.statusEl = document.getElementById("status-message")
-    this.startBtn = document.getElementById("start-btn")
-    this.replayBtn = document.getElementById("replay-btn")
-    this.progressEl = document.getElementById("progress-fill")
-    this.modalEl = document.getElementById("game-over-modal")
-    this.finalScoreEl = document.getElementById("final-score")
-    this.restartBtn = document.getElementById("restart-btn")
+        const allKeys = []
 
-    // Audio
-    this.audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        // Generar 3 octavas
+        for (let octave = 1; octave <= 3; octave++) {
+            baseNotes.forEach((baseNote) => {
+                // Calcular frecuencia para cada octava
+                const frequency = baseNote.baseFreq * Math.pow(2, octave - 2)
+                allKeys.push({
+                    note: `${baseNote.note}${octave}`,
+                    type: baseNote.type,
+                    frequency: frequency,
+                    octave: octave,
+                })
+            })
+        }
 
-    this.init()
-  }
+        return allKeys
+    }
 
-  generateKeys() {
-    const notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-    const baseFreq = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.0, 415.3, 440.0, 466.16, 493.88]
-    const keys = []
+    /**
+     * Inicializa el contexto de audio para generar sonidos del piano
+     */
+    initAudioContext() {
+        try {
+            this.audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        } catch (error) {
+            console.warn("Audio no disponible:", error)
+        }
+    }
 
-    for (let octave = 1; octave <= 3; octave++) {
-      notes.forEach((note, i) => {
-        keys.push({
-          note: `${note}${octave}`,
-          type: note.includes("#") ? "black" : "white",
-          frequency: baseFreq[i] * Math.pow(2, octave - 2),
+    /**
+     * Inicializa el piano creando las teclas y configurando eventos
+     */
+    init() {
+        this.createPiano()
+        this.setupEventListeners()
+        this.initNotesDisplay()
+    }
+
+    /**
+     * Inicializa el display de notas
+     */
+    initNotesDisplay() {
+        this.notesDisplay = document.getElementById('notes-display')
+    }
+
+    /**
+     * Crea las teclas del piano dinámicamente
+     */
+    createPiano() {
+        const piano = document.getElementById("piano")
+        piano.innerHTML = ""
+
+        // Obtener las teclas del teclado para mostrar en cada tecla del piano
+        const keyboardKeys = Object.keys(this.keyboardMap)
+
+        // Crear todas las teclas (0-35)
+        for (let index = 0; index < this.keys.length; index++) {
+            const key = this.keys[index]
+            const keyElement = document.createElement("div")
+
+            // Encontrar la tecla del teclado correspondiente
+            const keyboardKey = keyboardKeys.find((k) => this.keyboardMap[k] === index) || ""
+
+            // Clases base para todas las teclas
+            const baseClasses = "piano-key cursor-pointer transition-all duration-150 flex flex-col items-center justify-between select-none relative"
+
+            if (key.type === "white") {
+                keyElement.className = `${baseClasses} white-key w-12 h-40 mx-0.5 rounded-b-lg`
+                keyElement.innerHTML = `
+                    <div class="key-label text-gray-700 text-xs font-bold mt-2 bg-white bg-opacity-70 px-1 rounded">
+                        ${keyboardKey.toUpperCase()}
+                    </div>
+                    <div class="key-label text-gray-600 text-sm font-bold mb-3 bg-white bg-opacity-70 px-2 py-1 rounded">
+                        ${key.note}
+                    </div>
+                `
+            } else {
+                keyElement.className = `${baseClasses} black-key w-8 h-24 -mx-4 z-10 rounded-b-lg`
+                keyElement.innerHTML = `
+                    <div class="key-label text-white text-xs font-bold mt-1 bg-black bg-opacity-50 px-1 rounded">
+                        ${keyboardKey.toUpperCase()}
+                    </div>
+                    <div class="key-label text-white text-xs font-bold mb-2 bg-black bg-opacity-50 px-1 rounded">
+                        ${key.note}
+                    </div>
+                `
+            }
+
+            keyElement.dataset.index = index
+            keyElement.dataset.note = key.note
+
+            // Eventos para tocar la tecla
+            keyElement.addEventListener("mousedown", () => this.playKey(index))
+            keyElement.addEventListener("mouseup", () => this.releaseKey(index))
+            keyElement.addEventListener("mouseleave", () => this.releaseKey(index))
+
+            piano.appendChild(keyElement)
+        }
+    }
+
+    /**
+     * Configura todos los event listeners
+     */
+    setupEventListeners() {
+        // Soporte para teclado
+        document.addEventListener("keydown", (e) => this.handleKeyboard(e))
+        document.addEventListener("keyup", (e) => this.handleKeyboardUp(e))
+
+        // Botón de regresar al menú principal
+        document.getElementById('back-button').addEventListener('click', () => {
+            // Redirigir a la página del menú principal
+            window.location.href = '/Pantalla_Inicial/Botones.html'
         })
-      })
-    }
-    return keys
-  }
-
-  init() {
-    this.createPiano()
-    this.setupEvents()
-    this.updateDisplay()
-  }
-
-  createPiano() {
-    const piano = document.getElementById("piano")
-    piano.innerHTML = ""
-
-    // Determinar rango de teclas según el nivel
-    let startIndex, endIndex
-    if (this.level === 1) {
-      // Nivel 1: Solo primera octava (0-11)
-      startIndex = 0
-      endIndex = 11
-    } else if (this.level === 2) {
-      // Nivel 2: Dos octavas (0-23)
-      startIndex = 0
-      endIndex = 23
-    } else {
-      // Nivel 3+: Tres octavas (0-35)
-      startIndex = 0
-      endIndex = 35
     }
 
-    // Crear solo las teclas del rango correspondiente
-    for (let index = startIndex; index <= endIndex; index++) {
-      const key = this.keys[index]
-      const keyEl = document.createElement("div")
-      const keyboardKey = Object.keys(this.keyboardMap).find((k) => this.keyboardMap[k] === index) || ""
+    /**
+     * Maneja la entrada del teclado para tocar las teclas del piano
+     */
+    handleKeyboard(event) {
+        const key = event.key === " " ? "Space" : event.key.toLowerCase()
+        const keyIndex = this.keyboardMap[key]
 
-      if (key.type === "white") {
-        keyEl.className =
-          "piano-key white-key w-12 h-40 mx-0.5 rounded-b-lg cursor-pointer flex flex-col items-center justify-between"
-        keyEl.innerHTML = `
-                    <div class="text-gray-700 text-xs font-bold mt-2">${keyboardKey.toUpperCase()}</div>
-                    <div class="text-gray-600 text-sm font-bold mb-3">${key.note}</div>
-                `
-      } else {
-        keyEl.className =
-          "piano-key black-key w-8 h-24 -mx-4 z-10 rounded-b-lg cursor-pointer flex flex-col items-center justify-between"
-        keyEl.innerHTML = `
-                    <div class="text-white text-xs font-bold mt-1">${keyboardKey.toUpperCase()}</div>
-                    <div class="text-white text-xs font-bold mb-2">${key.note}</div>
-                `
-      }
-
-      keyEl.dataset.index = index
-      keyEl.addEventListener("mousedown", () => this.playKey(index))
-      keyEl.addEventListener("mouseup", () => this.releaseKey(index))
-      piano.appendChild(keyEl)
-    }
-  }
-
-  setupEvents() {
-    this.startBtn.addEventListener("click", () => this.startGame())
-    this.replayBtn.addEventListener("click", () => this.showPattern())
-    this.restartBtn.addEventListener("click", () => this.restartGame())
-
-    document.addEventListener("keydown", (e) => {
-      // BLOQUEO TOTAL: No procesar teclas durante la demostración
-      if (this.isPlaying) {
-        e.preventDefault()
-        return
-      }
-
-      const key = e.key.toLowerCase()
-      const index = this.keyboardMap[key]
-      if (index !== undefined && this.isKeyAvailable(index)) {
-        e.preventDefault()
-        this.playKey(index)
-      }
-    })
-
-    document.addEventListener("keyup", (e) => {
-      // BLOQUEO TOTAL: No procesar teclas durante la demostración
-      if (this.isPlaying) {
-        e.preventDefault()
-        return
-      }
-
-      const key = e.key.toLowerCase()
-      const index = this.keyboardMap[key]
-      if (index !== undefined && this.isKeyAvailable(index)) {
-        this.releaseKey(index)
-      }
-    })
-  }
-
-  startGame() {
-    this.gameStarted = true
-    this.score = 0
-    this.level = 1
-    this.hasError = false // Resetear estado de error
-    this.updateDisplay()
-    this.generatePattern()
-  }
-
-  generatePattern() {
-    this.pattern = []
-    this.userInput = []
-    const length = 3 + this.level
-
-    // Determinar rango de teclas disponibles según el nivel
-    let maxIndex
-    if (this.level === 1) {
-      maxIndex = 11 // Primera octava (0-11)
-    } else if (this.level === 2) {
-      maxIndex = 23 // Dos octavas (0-23)
-    } else {
-      maxIndex = 35 // Tres octavas (0-35)
+        if (keyIndex !== undefined) {
+            event.preventDefault()
+            this.playKey(keyIndex)
+        }
     }
 
-    for (let i = 0; i < length; i++) {
-      this.pattern.push(Math.floor(Math.random() * (maxIndex + 1)))
+    /**
+     * Maneja cuando se suelta una tecla del teclado
+     */
+    handleKeyboardUp(event) {
+        const key = event.key === " " ? "Space" : event.key.toLowerCase()
+        const keyIndex = this.keyboardMap[key]
+
+        if (keyIndex !== undefined) {
+            event.preventDefault()
+            this.releaseKey(keyIndex)
+        }
     }
 
-    this.showPattern()
-  }
+    /**
+     * Maneja cuando el usuario toca una tecla
+     */
+    playKey(keyIndex) {
+        const keyElement = document.querySelector(`[data-index="${keyIndex}"]`)
+        if (!keyElement) return
 
-  // Agregar una nueva función para limpiar todas las teclas después de la función showFeedback()
+        // Agregar efecto visual de tecla presionada
+        keyElement.classList.add("pressed")
 
-  clearAllKeys() {
-    const allKeys = document.querySelectorAll(".piano-key")
-    allKeys.forEach((keyEl) => {
-      keyEl.classList.remove("pressed", "wrong", "correct", "highlight")
-    })
-  }
+        // Reproducir sonido
+        this.playSound(this.keys[keyIndex].frequency)
 
-  // Modificar la función showPattern() para limpiar las teclas al inicio
-
-  async showPattern() {
-    this.isPlaying = true
-    this.hasError = false // Resetear estado de error
-    this.isTransitioning = false // Resetear estado de transición
-
-    // Limpiar todas las teclas antes de mostrar el patrón
-    this.clearAllKeys()
-
-    this.statusEl.textContent = "👀 Observa el patrón..."
-    this.startBtn.style.display = "none"
-    this.replayBtn.style.display = "none"
-
-    // Deshabilitar interacción con el piano
-    const piano = document.getElementById("piano")
-    piano.classList.add("piano-disabled")
-
-    await this.delay(1000)
-
-    for (let i = 0; i < this.pattern.length; i++) {
-      await this.highlightKey(this.pattern[i])
-      await this.delay(300)
+        // Agregar nota al display
+        this.addNoteToDisplay(this.keys[keyIndex].note)
     }
 
-    this.isPlaying = false
-    // Rehabilitar interacción con el piano
-    piano.classList.remove("piano-disabled")
-    this.statusEl.textContent = "🎹 ¡Ahora toca tú!"
-    this.replayBtn.style.display = "inline-block"
-    this.updateProgress()
-  }
-
-  async highlightKey(index) {
-    const keyEl = document.querySelector(`[data-index="${index}"]`)
-    if (keyEl) {
-      keyEl.classList.add("highlight", "pressed")
-      this.playSound(this.keys[index].frequency)
-      await this.delay(600)
-      keyEl.classList.remove("highlight", "pressed")
-    }
-  }
-
-  playKey(index) {
-    // BLOQUEO TOTAL: No permitir tocar durante demostración, error o transición
-    if (this.isPlaying || this.hasError || this.isTransitioning) {
-      return
+    /**
+     * Libera una tecla (efecto visual)
+     */
+    releaseKey(keyIndex) {
+        const keyElement = document.querySelector(`[data-index="${keyIndex}"]`)
+        if (keyElement) {
+            keyElement.classList.remove("pressed")
+        }
     }
 
-    // Verificar que la tecla esté disponible en el nivel actual
-    if (!this.isKeyAvailable(index)) {
-      return
-    }
+    /**
+     * Agrega una nota al display de notas tocadas
+     */
+    addNoteToDisplay(noteName) {
+        const noteId = Date.now() + Math.random() // ID único para la nota
+        
+        // Agregar nota al array
+        this.playedNotes.push({
+            id: noteId,
+            note: noteName,
+            timestamp: Date.now()
+        })
 
-    // Evitar procesamiento duplicado si ya se está procesando entrada
-    if (this.processingInput) {
-      return
-    }
+        // Limitar el número de notas mostradas
+        if (this.playedNotes.length > this.maxNotesDisplay) {
+            const oldestNote = this.playedNotes.shift()
+            const oldElement = document.getElementById(`note-${oldestNote.id}`)
+            if (oldElement) {
+                oldElement.remove()
+            }
+        }
 
-    const keyEl = document.querySelector(`[data-index="${index}"]`)
-    if (keyEl) {
-      keyEl.classList.add("pressed")
-      this.playSound(this.keys[index].frequency)
+        this.updateNotesDisplay()
 
-      if (this.gameStarted) {
-        this.processingInput = true
-        this.userInput.push(index)
-        this.checkInput()
-        // Resetear después de un breve delay
+        // Programar la desaparición de la nota
         setTimeout(() => {
-          this.processingInput = false
-        }, 100)
-      }
+            this.fadeOutNote(noteId)
+        }, this.noteFadeTime)
     }
-  }
 
-  releaseKey(index) {
-    const keyEl = document.querySelector(`[data-index="${index}"]`)
-    if (keyEl) {
-      keyEl.classList.remove("pressed")
+    /**
+     * Actualiza el display de notas
+     */
+    updateNotesDisplay() {
+        // Si no hay notas, mostrar mensaje por defecto
+        if (this.playedNotes.length === 0) {
+            this.notesDisplay.innerHTML = '<div class="default-message text-sm font-medium">Toca una tecla para ver las notas aquí...</div>'
+            return
+        }
+
+        // Crear elementos para las notas que no existen
+        this.playedNotes.forEach(noteData => {
+            const existingElement = document.getElementById(`note-${noteData.id}`)
+            if (!existingElement) {
+                const noteElement = document.createElement('span')
+                noteElement.id = `note-${noteData.id}`
+                noteElement.className = 'note-item'
+                noteElement.textContent = noteData.note
+                
+                // Limpiar el display si es la primera nota
+                if (this.notesDisplay.querySelector('.default-message')) {
+                    this.notesDisplay.innerHTML = ''
+                }
+                
+                this.notesDisplay.appendChild(noteElement)
+            }
+        })
     }
-  }
 
-  checkInput() {
-    // Si ya hay un error detectado, no procesar más entrada
-    if (this.hasError) return
-
-    const currentIndex = this.userInput.length - 1
-    const isCorrect = this.userInput[currentIndex] === this.pattern[currentIndex]
-
-    if (isCorrect) {
-      this.showFeedback(this.userInput[currentIndex], true)
-      this.updateProgress()
-
-      if (this.userInput.length === this.pattern.length) {
-        this.patternComplete()
-      }
-    } else {
-      // Marcar que hay un error para bloquear más entrada
-      this.hasError = true
-      this.showFeedback(this.userInput[currentIndex], false)
-      this.patternFailed()
+    /**
+     * Hace desaparecer una nota gradualmente
+     */
+    fadeOutNote(noteId) {
+        const noteElement = document.getElementById(`note-${noteId}`)
+        if (noteElement) {
+            noteElement.classList.add('fade-out')
+            
+            // Remover el elemento después de la animación
+            setTimeout(() => {
+                if (noteElement && noteElement.parentNode) {
+                    noteElement.remove()
+                }
+                
+                // Remover del array
+                this.playedNotes = this.playedNotes.filter(note => note.id !== noteId)
+                
+                // Si no quedan notas, mostrar mensaje por defecto
+                if (this.playedNotes.length === 0) {
+                    this.updateNotesDisplay()
+                }
+            }, 500) // Tiempo de la animación CSS
+        }
     }
-  }
 
-  showFeedback(index, isCorrect) {
-    const keyEl = document.querySelector(`[data-index="${index}"]`)
-    if (keyEl) {
-      keyEl.classList.add(isCorrect ? "correct" : "wrong")
-      setTimeout(() => keyEl.classList.remove(isCorrect ? "correct" : "wrong"), 500)
+    /**
+     * Reproduce un sonido con la frecuencia especificada
+     */
+    playSound(frequency) {
+        if (!this.audioContext) return
+
+        try {
+            const oscillator = this.audioContext.createOscillator()
+            const gainNode = this.audioContext.createGain()
+
+            oscillator.connect(gainNode)
+            gainNode.connect(this.audioContext.destination)
+
+            oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime)
+            oscillator.type = "sine"
+
+            gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime)
+            gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.8)
+
+            oscillator.start(this.audioContext.currentTime)
+            oscillator.stop(this.audioContext.currentTime + 0.8)
+        } catch (error) {
+            console.warn("Error reproduciendo sonido:", error)
+        }
     }
-  }
-
-  patternComplete() {
-    this.isTransitioning = true // Bloquear piano durante transición
-    this.score += this.level * 10
-    this.level++
-    this.statusEl.textContent = `🎉 ¡Nivel ${this.level - 1} completado!`
-    this.updateDisplay()
-
-    // Ocultar botones y deshabilitar piano durante la transición
-    this.startBtn.style.display = "none"
-    this.replayBtn.style.display = "none"
-    const piano = document.getElementById("piano")
-    piano.classList.add("piano-disabled")
-
-    setTimeout(() => {
-      // Recrear piano si cambió el número de octavas disponibles
-      this.createPiano()
-      this.generatePattern()
-    }, 2000)
-  }
-
-  // También modificar patternFailed() para limpiar las teclas antes del timeout
-
-  patternFailed() {
-    this.lives--
-    this.updateDisplay()
-
-    if (this.lives <= 0) {
-      this.gameOver()
-    } else {
-      this.isTransitioning = true // Bloquear durante mensaje de error
-      this.statusEl.textContent = `❌ Incorrecto. Vidas: ${this.lives}`
-
-      // Deshabilitar piano durante el mensaje de error
-      const piano = document.getElementById("piano")
-      piano.classList.add("piano-disabled")
-
-      setTimeout(() => {
-        this.userInput = []
-        // Limpiar teclas antes de mostrar el patrón nuevamente
-        this.clearAllKeys()
-        this.showPattern() // Repetir el mismo patrón
-      }, 2000)
-    }
-  }
-
-  updateProgress() {
-    const progress = (this.userInput.length / this.pattern.length) * 100
-    this.progressEl.style.width = `${progress}%`
-  }
-
-  playSound(frequency) {
-    try {
-      const oscillator = this.audioContext.createOscillator()
-      const gainNode = this.audioContext.createGain()
-
-      oscillator.connect(gainNode)
-      gainNode.connect(this.audioContext.destination)
-
-      oscillator.frequency.setValueAtTime(frequency, this.audioContext.currentTime)
-      oscillator.type = "sine"
-
-      gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime)
-      gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5)
-
-      oscillator.start()
-      oscillator.stop(this.audioContext.currentTime + 0.5)
-    } catch (error) {
-      console.warn("Error de audio:", error)
-    }
-  }
-
-  updateDisplay() {
-    this.scoreEl.textContent = this.score
-    this.levelEl.textContent = this.level
-    this.livesEl.textContent = this.lives
-  }
-
-  gameOver() {
-    this.gameStarted = false
-    this.statusEl.textContent = "💀 ¡Juego terminado!"
-    this.finalScoreEl.textContent = this.score
-    this.modalEl.style.display = "flex"
-  }
-
-  restartGame() {
-    // Resetear completamente el estado del juego
-    this.score = 0
-    this.level = 1
-    this.lives = 3
-    this.pattern = []
-    this.userInput = []
-    this.gameStarted = false
-    this.isPlaying = false
-    this.hasError = false
-    this.isTransitioning = false
-    this.processingInput = false
-
-    // Cerrar modal y resetear UI
-    this.modalEl.style.display = "none"
-    this.startBtn.style.display = "inline-block"
-    this.replayBtn.style.display = "none"
-    this.statusEl.textContent = "¡Presiona INICIAR para comenzar!"
-    this.progressEl.style.width = "0%"
-
-    // Asegurar que el piano esté habilitado
-    const piano = document.getElementById("piano")
-    piano.classList.remove("piano-disabled")
-
-    // Recrear piano para nivel 1
-    this.createPiano()
-    this.updateDisplay()
-  }
-
-  delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
-  }
-
-  isKeyAvailable(index) {
-    if (this.level === 1) {
-      return index >= 0 && index <= 11
-    } else if (this.level === 2) {
-      return index >= 0 && index <= 23
-    } else {
-      return index >= 0 && index <= 35
-    }
-  }
 }
 
-// Inicializar cuando carga la página
+// Inicializar el piano cuando se carga la página
 document.addEventListener("DOMContentLoaded", () => {
-  new PianoGame()
+    new PianoLibre()
 })

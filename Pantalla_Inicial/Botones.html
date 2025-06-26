@@ -267,6 +267,17 @@
       color: #666;
       font-style: italic;
     }
+     
+    /* Overlay que se expandirá desde el botón */
+.color-overlay {
+  position: fixed;
+  border-radius: 50%;
+  transform: scale(0);
+  z-index: 100;
+  pointer-events: none;
+  transition: transform 0.6s ease-out;
+}
+
 
      @keyframes titlePulse {
       0% { transform: scale(1); }
@@ -372,30 +383,6 @@
   </div>
   </div>
 
-  <script>
-    // Crear notas musicales en bucle
-const notas = ["♪", "♫", "♬", "♩", "♭", "♯", "𝄞", "𝄢", "𝅘𝅥𝅮", "𝅘𝅥𝅯", "𝅘𝅥𝅰"];
-function crearNotasMultiples() {
-  for (let i = 0; i < 3; i++) {
-    const note = document.createElement("div");
-    note.className = "note";
-    note.innerText = notas[Math.floor(Math.random() * notas.length)];
-    note.style.left = Math.random() * 100 + "%";
-    note.style.fontSize = `${Math.random() * 20 + 20}px`;
-    note.style.bottom = "-40px";
-    note.style.zIndex = "5";
-    document.body.appendChild(note);
-
-    setTimeout(() => {
-      note.remove();
-    }, 5000);
-  }
-}
-
-// Bucle continuo de notas
-setTimeout(() => {
-  setInterval(crearNotasMultiples, 300);
-});
-  </script>
+<script src="Animacion_Inicial.js"></script>
 </body>
 </html>

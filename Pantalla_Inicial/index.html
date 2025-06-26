@@ -64,19 +64,6 @@
       animation: fadeInClef 4s ease-in-out forwards;
     }
 
-    .floating-notes {
-      position: absolute;
-      font-size: 30px;
-      color: #333;
-      opacity: 0.1;
-      animation: floatNotes 15s linear infinite;
-    }
-
-    .note1 { top: 15%; left: 20%; animation-delay: 0s; }
-    .note2 { top: 60%; left: 80%; animation-delay: 3s; }
-    .note3 { top: 35%; left: 70%; animation-delay: 6s; }
-    .note4 { top: 80%; left: 30%; animation-delay: 9s; }
-
     .container {
       display: flex;
       flex-direction: column;
@@ -253,11 +240,6 @@
     <div class="staff-line" style="animation-delay: 5s;"></div>
   </div>
 
-  <!-- Notas flotantes -->
-  <div class="floating-notes note1">♪</div>
-  <div class="floating-notes note2">♫</div>
-  <div class="floating-notes note3">♬</div>
-  <div class="floating-notes note4">♩</div>
 </div>
 
 
@@ -268,43 +250,6 @@
     </div>
   </div>
 
-  <script>
-    const piano = document.getElementById("piano");
-
-    for (let i = 0; i < 22; i++) {
-      const key = document.createElement("div");
-      key.classList.add("key");
-      piano.appendChild(key);
-
-      if (![0, 3, 7, 10, 14, 17, 21].includes(i)) {
-        const blackKey = document.createElement("div");
-        blackKey.classList.add("key", "black");
-        key.appendChild(blackKey);
-      }
-    }
-    // Crear notas musicales en bucle
-const notas = ["♪", "♫", "♬", "♩", "♭", "♯", "𝄞", "𝄢", "𝅘𝅥𝅮", "𝅘𝅥𝅯", "𝅘𝅥𝅰"];
-function crearNotasMultiples() {
-  for (let i = 0; i < 3; i++) {
-    const note = document.createElement("div");
-    note.className = "note";
-    note.innerText = notas[Math.floor(Math.random() * notas.length)];
-    note.style.left = Math.random() * 100 + "%";
-    note.style.fontSize = `${Math.random() * 20 + 20}px`;
-    note.style.bottom = "-40px";
-    note.style.zIndex = "5";
-    document.body.appendChild(note);
-
-    setTimeout(() => {
-      note.remove();
-    }, 5000);
-  }
-}
-
-// Bucle continuo de notas
-setTimeout(() => {
-  setInterval(crearNotasMultiples, 300);
-}, 3000);
-  </script>
+ <script src="Animacion_Inicial.js"></script>
 </body>
 </html>
